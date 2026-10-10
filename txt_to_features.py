@@ -12,6 +12,7 @@ def txt_features(p_resumetxt, p_jdtxt):
     :return: dataframe of features 
     """
     txt = p_resumetxt+p_jdtxt
+    print("Number of documents:", len(txt))
     tv = TfidfVectorizer(max_df=0.85,min_df=1,ngram_range=(1,3))
     tfidf_wm = tv.fit_transform(txt)
 

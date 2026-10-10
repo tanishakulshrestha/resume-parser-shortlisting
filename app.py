@@ -80,7 +80,36 @@ def download(code):
         if os.path.exists(path):
             return send_file(path)
     abort(404)
- 
+@app.route('/download_csv', methods=['GET'])
+def download_csv():
+    path = os.path.join(app.config['DOWNLOAD_FOLDER'], 'Candidates.csv')
+
+    if os.path.exists(path):
+        return send_file(path, as_attachment=True)
+
+    return "No results available. Please process resumes first.", 404
+
+@app.route('/clear_resumes', methods=['POST'])
+def clear_resumes():
+    files = _get_files()
+
+    # Delete uploaded resumes
+    for filename in files:
+        path = os.path.join(UPLOAD_FOLDER, filename)
+        if os.path.exists(path):
+            os.remove(path)
+
+    # Delete files.json
+    file_list = os.path.join(UPLOAD_FOLDER, 'files.json')
+    if os.path.exists(file_list):
+        os.remove(file_list)
+
+    # Delete previous CSV results
+    csv_path = os.path.join(DOWNLOAD_FOLDER, 'Candidates.csv')
+    if os.path.exists(csv_path):
+        os.remove(csv_path)
+
+    return redirect(url_for('main_page'))
 def _show_page():
     files = _get_files()
     return render_template('index.html', files=files)
@@ -95,6 +124,7 @@ def _get_files():
 
 @app.route('/process',methods=["POST"])
 def process():
+    print("PROCESS ROUTE CALLED")
     if request.method == 'POST':
 
         rawtext = request.form['rawtext']
@@ -128,12 +158,29 @@ def process():
 
         dt['Skills']=dt['Original'].apply(lambda x: get_skills(x,skill))
         dt = dt.drop(columns=['Original','Original Resume'])
+       
         sorted_dt = dt.sort_values(by=['JD 1'], ascending=False)
 
-        out_path = DOWNLOAD_FOLDER+"Candidates.csv"
-        sorted_dt.to_csv(out_path,index=False)
+        out_path = DOWNLOAD_FOLDER + "Candidates.csv"
+        sorted_dt.to_csv(out_path, index=False)
 
-        return send_file(out_path, as_attachment=True)
+# Get the best matching candidate
+        best_match = sorted_dt.iloc[0]
+
+        best_candidate = {
+            'name': best_match["Candidate's Name"],
+            'score': round(best_match["JD 1"] * 100, 2),
+            'phone': best_match["Phone No."],
+            'email': best_match["E-Mail ID"],
+            'skills': best_match["Skills"]
+}
+        print("BEST MATCH:", best_candidate)
+        return render_template(
+    'index.html',
+    files=_get_files(),
+    best_match=best_candidate
+)
+
 
 if __name__=="__main__":
     app.run(port=8080, debug=False)

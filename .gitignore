@@ -1,5 +1,21 @@
+# Python virtual environments
 /notebooks
-/Parser-venv
-/__pycache__
-/files
-/Rpvenv
+/Parser-venv/
+/Rpvenv/
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Sensitive configuration
+.env
+
+# Uploaded resumes
+uploads/*
+
+# Generated CSV files
+*.csv
+
+# OS files
+.DS_Store
