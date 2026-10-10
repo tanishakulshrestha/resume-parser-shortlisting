@@ -1,31 +1,45 @@
+
+import os
 import re
 import nltk
-nltk.download('stopwords')
-nltk.download('punkt_tab')
-nltk.download('omw-1.4')
-nltk.download('averaged_perceptron_tagger_eng')
-nltk.download('wordnet')
 from nltk.corpus import stopwords
+
+# Use a writable directory on Vercel
+NLTK_DATA_DIR = "/tmp/nltk_data"
+os.makedirs(NLTK_DATA_DIR, exist_ok=True)
+
+# Tell NLTK where to find its resources
+nltk.data.path.insert(0, NLTK_DATA_DIR)
+
+# Download required resources
+nltk.download("stopwords", download_dir=NLTK_DATA_DIR, quiet=True)
+nltk.download("punkt_tab", download_dir=NLTK_DATA_DIR, quiet=True)
+nltk.download("omw-1.4", download_dir=NLTK_DATA_DIR, quiet=True)
+nltk.download(
+    "averaged_perceptron_tagger_eng",
+    download_dir=NLTK_DATA_DIR,
+    quiet=True
+)
+nltk.download("wordnet", download_dir=NLTK_DATA_DIR, quiet=True)
+
 
 def preprocess(txt):
     """
-    This function returns a preprocessed list of texts 
+    Preprocess a list of resume texts.
+
     :param txt: list containing texts
     :return: preprocessed list of texts
     """
-    sw = stopwords.words('english')
-    space_pattern = '\s+'
-    special_letters =  "[^a-zA-Z#]]"
+    sw = set(stopwords.words("english"))
     p_txt = []
 
-    for resume in txt : 
-        text = re.sub(space_pattern, ' ', resume)# remove extra spaces
-        text = re.sub(special_letters, ' ', text)#remove special characteres
-        text = re.sub(r'[^\w\s]', '',text)#remove punctuations
-        text = text.split() #split words in a text
-        text = [word for word in text if word.isalpha()] #keep alphabetic word
-        text = [w for w in text if w not in sw] #remove stop words
-        text = [item.lower() for item in text] #lowercase words
-        p_txt.append(" ".join(text))#joins all words
+    for resume in txt:
+        text = re.sub(r"\s+", " ", resume)  # Remove extra spaces
+        text = re.sub(r"[^a-zA-Z\s]", " ", text)  # Remove special characters
+        text = re.sub(r"\s+", " ", text)  # Normalize spaces
+        text = text.split()
+        text = [word for word in text if word.lower() not in sw]
+        text = [word.lower() for word in text]
+        p_txt.append(" ".join(text))
 
     return p_txt
